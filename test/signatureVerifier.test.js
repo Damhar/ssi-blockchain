@@ -43,33 +43,26 @@ contract("SignatureVerifier", () => {
     */
     it("verifies ECDSA signature and recovers signer", async () => {
 
-        // Pobranie instancji wdrożonego kontraktu
         const verifier = await SignatureVerifier.deployed();
 
-        // Klucz prywatny użytkownika (konto testowe Ganache)
         const privateKey = process.env.TEST_PRIVATE_KEY;
 
-        // Utworzenie portfela Ethereum reprezentującego tożsamość użytkownika
         const wallet = new ethers.Wallet(privateKey);
 
-        // Publiczny adres Ethereum użytkownika
         const userAddress = wallet.address;
 
-        // Nonce – jednorazowy identyfikator próby weryfikacji
         const nonce = ethers.zeroPadValue("0x01", 32);
 
-        // Generowanie hasha wiadomości po stronie smart kontraktu
         const messageHash = await verifier.getMessageHash(userAddress, nonce);
 
-        // Podpisanie hasha off-chain przy użyciu klucza prywatnego
         const signature = await wallet.signMessage(
             ethers.getBytes(messageHash)
         );
 
         // Weryfikacja podpisu po stronie smart kontraktu
         const isValid = await verifier.verify(
-            userAddress,   // expectedSigner
-            userAddress,   // user
+            userAddress,
+            userAddress,
             nonce,
             signature
         );
@@ -88,19 +81,13 @@ contract("SignatureVerifier", () => {
 
         const verifier = await SignatureVerifier.deployed();
 
-        // Ofiara – prawdziwy użytkownik
         const victimWallet = new ethers.Wallet(process.env.TEST_PRIVATE_KEY);
         const victimAddress = victimWallet.address;
-
-        // Atakujący – losowo wygenerowany portfel Ethereum
-        const attackerWallet = ethers.Wallet.createRandom();
-
         const nonce = ethers.zeroPadValue("0x01", 32);
 
-        // Hash generowany dla danych ofiary
-        const messageHash = await verifier.getMessageHash(victimAddress, nonce);
+        const attackerWallet = ethers.Wallet.createRandom();
 
-        // Podpis wykonany kluczem atakującego
+        const messageHash = await verifier.getMessageHash(victimAddress, nonce);
         const signature = await attackerWallet.signMessage(
             ethers.getBytes(messageHash)
         );
