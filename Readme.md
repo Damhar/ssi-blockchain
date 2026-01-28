@@ -24,9 +24,11 @@ przechowywania danych osobowych.
    ```bash
    npm install
 3. Skonfiguruj zmienną środowiskową:
-TEST_PRIVATE_KEY=0x...
+   ```bash
+   TEST_PRIVATE_KEY=0x...
 4. Uruchom testy:
-truffle test
+   ```bash
+   truffle test
 
 Autor
 

@@ -31,11 +31,11 @@ contract SignatureVerifier {
         - podpisywanie hasha jest tańsze i bezpieczniejsze
         - hash ma zawsze stałą długość (32 bajty)
     */
+
     function getMessageHash(
         address user,
         bytes32 nonce
     ) public pure returns (bytes32) {
-        // keccak256 = standardowa funkcja hashująca w Ethereum
         return keccak256(abi.encodePacked(user, nonce));
     }
 
@@ -50,6 +50,7 @@ contract SignatureVerifier {
         - nie może zostać użyty jako podpis transakcji
         - jest jednoznacznie podpisem "wiadomości"
     */
+
     function getEthSignedMessageHash(
         bytes32 messageHash
     ) public pure returns (bytes32) {
@@ -75,32 +76,29 @@ contract SignatureVerifier {
         Funkcja ecrecover pozwala "odtworzyć" adres publiczny
         na podstawie podpisu i podpisanej wiadomości.
     */
+
     function recoverSigner(
         bytes32 ethSignedMessageHash,
         bytes memory signature
     ) public pure returns (address) {
-        // Podpis musi mieć dokładnie 65 bajtów
         require(signature.length == 65, "Invalid signature length");
 
         bytes32 r;
         bytes32 s;
         uint8 v;
 
-        // Ręczne wyciągnięcie r, s, v z podpisu (niski poziom - assembly)
         assembly {
             r := mload(add(signature, 32))
             s := mload(add(signature, 64))
             v := byte(0, mload(add(signature, 96)))
         }
 
-        // Niektóre biblioteki zwracają v = 0/1 zamiast 27/28
         if (v < 27) {
             v += 27;
         }
 
         require(v == 27 || v == 28, "Invalid v value");
 
-        // ecrecover zwraca adres, który wygenerował podpis
         return ecrecover(ethSignedMessageHash, v, r, s);
     }
 
@@ -117,22 +115,19 @@ contract SignatureVerifier {
         - true  -> podpis poprawny
         - false -> podpis nieprawidłowy
     */
+
     function verify(
         address expectedSigner,
         address user,
         bytes32 nonce,
         bytes memory signature
     ) public pure returns (bool) {
-        // 1. Tworzymy hash wiadomości
         bytes32 messageHash = getMessageHash(user, nonce);
 
-        // 2. Tworzymy hash zgodny ze standardem Ethereum
         bytes32 ethHash = getEthSignedMessageHash(messageHash);
 
-        // 3. Odzyskujemy adres z podpisu
         address recoveredSigner = recoverSigner(ethHash, signature);
 
-        // 4. Sprawdzamy, czy adres się zgadza
         return recoveredSigner == expectedSigner;
     }
 }
